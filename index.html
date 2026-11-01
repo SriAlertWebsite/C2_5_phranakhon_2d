@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="th">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+/* UI งานวิจัย B: คงสีข้อมูลต้นฉบับ */
+:root{--navy:#142d4c;--ink:#1d3450;--line:#e1e9f2;--muted:#5b6c80}
+html,body{font-family:Tahoma,"Noto Sans Thai",Arial,sans-serif;color:var(--ink);margin:0}
+#map{position:absolute;top:0;left:0;right:390px;width:auto!important;height:100vh!important;background:#e9eef2}
+.map-heading{position:absolute;top:16px;left:16px;z-index:700;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 5px 22px #1a34502b;padding:15px 20px;max-width:min(580px,calc(100vw - 470px));pointer-events:none;font-size:20px;font-weight:700;line-height:1.5;color:var(--navy)}
+.info-sidebar{position:absolute;right:0;top:0;bottom:0;width:390px;background:#fff;border-left:1px solid var(--line);box-shadow:-6px 0 22px #1a345018;z-index:1050;transition:transform .25s ease;box-sizing:border-box}
+.info-sidebar.closed{transform:translateX(100%)}
+.info-sidebar-inner{height:100%;overflow:auto;padding:27px 25px 30px;box-sizing:border-box}
+.info-sidebar h2{font-size:23px;line-height:1.5;margin:0;color:var(--navy)}
+.info-accent{width:54px;height:3px;background:#087e89;border-radius:8px;margin:15px 0 24px}
+.info-card{border:1px solid #e4ebf3;background:#f5f8fb;border-radius:10px;padding:18px 16px;margin-bottom:17px}
+.info-card h3{font-size:16px;margin:0 0 14px;color:var(--navy)}
+.key-row{display:flex;align-items:center;gap:12px;margin:12px 0;font-size:15px;line-height:1.6}
+.color-chip{display:inline-block;flex:0 0 19px;width:19px;height:19px;border:1px solid #60708330;border-radius:2px}
+.info-note{font-size:14px;line-height:1.85;color:#586b7f;margin:12px 0 0}
+.credits{border-top:1px solid var(--line);padding-top:17px;color:#6c7b8d;font-size:13px;line-height:1.9}
+.credits a{color:#136d91}
+.sidebar-close{position:absolute;top:21px;right:17px;width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--navy);font-size:23px;cursor:pointer}
+.sidebar-toggle{position:absolute;right:390px;top:50%;transform:translateY(-50%);width:36px;height:65px;z-index:1051;border:0;border-radius:8px 0 0 8px;background:var(--navy);color:white;cursor:pointer;font-size:23px;box-shadow:-3px 2px 12px #1a34503a;transition:right .25s ease}
+.sidebar-toggle.closed{right:0}
+.leaflet-control-layers{border-radius:8px!important;box-shadow:0 5px 18px #17385e25!important;border:1px solid #e2eaf2!important;font-family:Tahoma,Arial,sans-serif!important}
+.leaflet-control-layers-expanded{font-size:14px!important;padding:9px 12px!important;max-width:min(310px,calc(100vw - 36px))!important;max-height:55vh!important;overflow:auto}
+.leaflet-top.leaflet-left{top:100px;left:12px}
+.leaflet-popup-content-wrapper{border-radius:0!important;padding:0!important;overflow:hidden;box-shadow:0 12px 30px #152c4c33!important;border:1px solid #d4e0eb}
+.leaflet-popup-content{margin:0!important;width:350px!important;max-width:calc(100vw - 70px)!important}
+.research-pop{padding:14px;background:#fff}
+.research-pop-title{color:var(--navy);font-size:17px;font-weight:700;padding:3px 25px 12px 0;line-height:1.4}
+.research-pop-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;line-height:1.5}
+.research-pop-table th,.research-pop-table td{border:1px solid #d7e2ec;padding:8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.research-pop-table th{width:43%;background:#eef4fa;color:#20384f}
+.research-pop-table td{background:white}
+.leaflet-popup-close-button{z-index:10!important;color:var(--navy)!important;right:10px!important;top:7px!important;font-size:25px!important}
+@media(max-width:760px){#map{right:0;width:100%!important}.info-sidebar{width:min(90vw,390px)}.sidebar-toggle{right:min(90vw,390px)}.map-heading{top:12px;left:12px;max-width:calc(100vw - 95px);font-size:15px;padding:11px 13px}.leaflet-top.leaflet-left{top:88px;left:7px}.leaflet-popup-content{width:310px!important}}
+</style>
+        <title>แผนที่ช่วงความสูงอาคารกับการตอบสนองของชั้นดินจากแรงแผ่นดินไหว (เขตพระนคร)</title>
+    </head>
+    <body>
+        <div id="map">
+        </div><div id="map-resource-warning" hidden style="position:fixed;left:18px;bottom:25px;z-index:2000;background:#fff9ec;border:1px solid #dfb55c;color:#593e0d;padding:12px 16px;border-radius:6px;max-width:420px;font:14px/1.6 Tahoma,sans-serif">แผนที่ยังไม่โหลด: กรุณานำ index.html ไปวางในโฟลเดอร์ qgis2web เดิมที่มี css/, js/ และ data/ ครบ แล้วเปิดผ่าน GitHub Pages</div><div class="map-heading">แผนที่ช่วงความสูงอาคารกับการตอบสนองของชั้นดินจากแรงแผ่นดินไหว (เขตพระนคร)</div><button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="ปิดแถบรายละเอียด" aria-expanded="true">›</button>
+<aside class="info-sidebar" id="infoSidebar">
+<button class="sidebar-close" id="sidebarClose" type="button" aria-label="ปิดรายละเอียด">×</button>
+<div class="info-sidebar-inner"><h2>รายละเอียดแผนที่สำรวจ</h2><div class="info-accent"></div>
+<section class="info-card"><h3>คำอธิบายสีและช่วงความสูงอาคาร</h3>
+<div class="key-row"><span class="color-chip" style="background:#33a02c"></span><span><strong>สีเขียว</strong> — 0 ถึง 50 เมตร</span></div>
+<div class="key-row"><span class="color-chip" style="background:#e31a1c"></span><span><strong>สีแดง</strong> — 50 ถึง 80 เมตร</span></div>
+<div class="key-row"><span class="color-chip" style="background:#33a02c"></span><span><strong>สีเขียว</strong> — 80 เมตรขึ้นไป</span></div>
+<div class="resonance-meaning" style="border-top:1px solid #dfe8f1;margin-top:13px;padding-top:12px;line-height:1.85;font-size:16px;color:#25405b">
+ <div style="font-weight:700;margin-bottom:8px;color:#142d4c;font-size:17px">ความหมายของสีต่อการสั่นพ้องกับชั้นดิน</div>
+ <p style="margin:0 0 10px"><strong style="color:#218838">สีเขียว</strong> หมายถึง ช่วงความสูงอาคารที่<strong style="color:#218838;font-size:1.12em">ไม่อยู่</strong>ในช่วงการสั่นพ้องกับชั้นดินจากแรงแผ่นดินไหวตามเกณฑ์ของแผนที่นี้</p>
+ <p style="margin:0"><strong style="color:#d7191c">สีแดง</strong> หมายถึง ช่วงความสูงอาคารที่<strong style="color:#d7191c;font-size:1.12em">อยู่</strong>ในช่วงการสั่นพ้องกับชั้นดินจากแรงแผ่นดินไหว <strong style="color:#d7191c;font-size:1.12em">เฝ้าระวัง</strong></p>
+ </div>
+</section>
+<section class="info-card"><h3>วิธีใช้งานแผนที่</h3>
+<p class="info-note">คลิกพื้นที่อาคารเพื่อดูข้อมูลในตาราง กด × เพื่อปิด และใช้กล่องรายการเลเยอร์ทางซ้ายเพื่อเปิด–ปิดชั้นข้อมูลด้วยช่องทำเครื่องหมาย</p>
+</section>
+<div class="credits">ได้รับการสนับสนุนจาก สกสว. · ข้อมูลพื้นหลังแผนที่ <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a></div>
+</div></aside>
+<script>
+(function(){
+const panel=document.getElementById('infoSidebar');
+const toggle=document.getElementById('sidebarToggle');
+const close=document.getElementById('sidebarClose');
+function setPanel(open){
+ panel.classList.toggle('closed',!open);toggle.classList.toggle('closed',!open);
+ toggle.textContent=open?'›':'‹';toggle.setAttribute('aria-expanded',String(open));
+ toggle.setAttribute('aria-label',open?'ปิดแถบรายละเอียด':'เปิดแถบรายละเอียด');
+ const map=document.getElementById('map');map.style.right=open&&window.innerWidth>760?'390px':'0px';
+ if(window.map&&typeof window.map.invalidateSize==='function')setTimeout(function(){window.map.invalidateSize()},300);
+}
+toggle.addEventListener('click',function(){setPanel(panel.classList.contains('closed'));});
+close.addEventListener('click',function(){setPanel(false)});
+window.addEventListener('resize',function(){setPanel(!panel.classList.contains('closed'))});
+})();
+</script>
+        <script>
+window.addEventListener('error',function(event){
+  var path=event && event.filename || '';
+  if(path.indexOf('/data/')!==-1 || path.indexOf('/js/')!==-1){
+    var n=document.getElementById('map-resource-warning');
+    if(n)n.hidden=false;
+  }
+});
+</script>
+<script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="data/PhraNakhon_1.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:19, minZoom:1
+        }).fitBounds([[13.738441102738406,100.46810886677056],[13.773554459524474,100.52914241962843]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    var img = popup._contentNode.querySelector('td img');
+                    if (img) {
+                        // If already loaded (cache), update immediately
+                        if (img.complete && img.naturalHeight > 0) {
+                            popup.update();
+                        } else {
+                            img.addEventListener('load', function() {
+                                popup.update();
+                            });
+                            img.addEventListener('error', function() {
+                                popup.update();
+                            });
+                        }
+                    }
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OpenStreetMap2_0');
+        map.getPane('pane_OpenStreetMap2_0').style.zIndex = 400;
+        var layer_OpenStreetMap2_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap2_0',
+            opacity: 1.0,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+            minZoom: 1,
+            maxZoom: 19,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_OpenStreetMap2_0;
+        map.addLayer(layer_OpenStreetMap2_0);
+        function pop_PhraNakhon_1(feature, layer) {
+            var p=feature.properties || {};
+            function esc(v){return v===null||v===undefined||v===''?'—':String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+            var keys=['OBJECTID','BLDG_ID','BL_HEIGHT','BL_DEPTH','BL_NSTOREY','BL_UNIT_F','BL_AREA','BL_AREA_FL','BL_MATL','BL_NAME','BL_SUBNAME','BL_VILLAGE','BL_ROAD','BL_SOI','BL_SUB_DIS','BL_DISTRIC','BL_CHANGWA','BL_POSTCOD','UPDATE_YEA','BL_REMARK','TUMB_CODE','AMPH_CODE','PROV_CODE','Shape_Leng','Shape_Area','Cal_HEIGHT'];
+            var rows=keys.filter(function(k){return p[k]!==null&&p[k]!==undefined&&p[k]!==''}).map(function(k){return '<tr><th>'+esc(k)+'</th><td>'+esc(p[k])+'</td></tr>'}).join('');
+            var body='<div class="research-pop"><div class="research-pop-title">ข้อมูลอาคาร'+(p.BLDG_ID?' · '+esc(p.BLDG_ID):'')+'</div><table class="research-pop-table">'+rows+'</table></div>';
+            layer.bindPopup(body,{maxWidth:420,minWidth:290,maxHeight:440,closeButton:true,autoPan:true});
+        }
+
+        function style_PhraNakhon_1_0(feature) {
+            if (feature.properties['Cal_HEIGHT'] >= 0.000000 && feature.properties['Cal_HEIGHT'] <= 50.000000 ) {
+                return {
+                pane: 'pane_PhraNakhon_1',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(51,160,44,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Cal_HEIGHT'] >= 50.000000 && feature.properties['Cal_HEIGHT'] <= 80.000000 ) {
+                return {
+                pane: 'pane_PhraNakhon_1',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,26,28,1.0)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['Cal_HEIGHT'] >= 80.000000 && feature.properties['Cal_HEIGHT'] <= 400.000000 ) {
+                return {
+                pane: 'pane_PhraNakhon_1',
+                stroke: false, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(51,160,44,1.0)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_PhraNakhon_1');
+        map.getPane('pane_PhraNakhon_1').style.zIndex = 401;
+        map.getPane('pane_PhraNakhon_1').style['mix-blend-mode'] = 'normal';
+        var layer_PhraNakhon_1 = new L.geoJson(json_PhraNakhon_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PhraNakhon_1',
+            layerName: 'layer_PhraNakhon_1',
+            pane: 'pane_PhraNakhon_1',
+            onEachFeature: pop_PhraNakhon_1,
+            style: style_PhraNakhon_1_0,
+        });
+        bounds_group.addLayer(layer_PhraNakhon_1);
+        map.addLayer(layer_PhraNakhon_1);
+        var overlaysTree = [
+            {label: 'พระนคร <div style="font-size:13px;line-height:1.95;margin-left:14px"><div><span style="display:inline-block;width:15px;height:15px;background:#33a02c;border:1px solid #888;vertical-align:middle;margin-right:8px"></span>0–50 เมตร</div><div><span style="display:inline-block;width:15px;height:15px;background:#e31a1c;border:1px solid #888;vertical-align:middle;margin-right:8px"></span>50–80 เมตร</div><div><span style="display:inline-block;width:15px;height:15px;background:#33a02c;border:1px solid #888;vertical-align:middle;margin-right:8px"></span>80 เมตรขึ้นไป</div></div>', layer: layer_PhraNakhon_1},
+            {label: 'OpenStreetMap', layer: layer_OpenStreetMap2_0}
+        ];
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true, 
+        });
+        lay.setPosition('topleft');
+        lay.addTo(map);
+        setBounds();
+        </script>        
+    </body>
+</html>
